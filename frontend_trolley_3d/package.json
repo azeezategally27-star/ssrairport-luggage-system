@@ -1,0 +1,12 @@
+{
+  "name": "ssrairport-trolley-3d",
+  "version": "0.1.0",
+  "description": "Electron + Three.js trolley processes demo for Mauritius airport",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^25.0.0"
+  }
+}

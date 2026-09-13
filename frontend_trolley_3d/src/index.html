@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>SSRAirport Trolley Processes 3D Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/three@0.152.2/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.152.2/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+  <div id="left">
+    <h2>Trolley Dispatch</h2>
+    <div class="controls">
+      <button id="btnStart">Start Simulation</button>
+      <button id="btnPause">Pause</button>
+      <button id="btnAdd">Add Trolley</button>
+      <button id="btnBreak">Simulate Fault</button>
+      <label>Speed <input id="speed" type="range" min="0.2" max="2" step="0.1" value="1"></label>
+      <hr>
+      <h4>Selected</h4>
+      <div id="selectedInfo">None</div>
+    </div>
+  </div>
+  <div id="center">
+    <canvas id="scene"></canvas>
+  </div>
+  <div id="right">
+    <h3>Analytics</h3>
+    <div id="metrics">Trolleys: 0</div>
+    <h4>Scenario</h4>
+    <button id="btnLoadScenario">Load Scenario</button>
+    <p>Use scenario to script peak periods.</p>
+  </div>
+  <script src="trolley.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
