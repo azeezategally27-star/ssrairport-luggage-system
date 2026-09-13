@@ -1,0 +1,10 @@
+/* animations.c - very small animation helper (placeholder)
+ * For demo the functions are minimal; in a real app this would include
+ * animation queues, per-property tweening and easing functions.
+ */
+
+#include "animations.h"
+
+void animations_update_all(void) {
+    // placeholder: nothing to update in this simplified demo
+}
