@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="420" viewBox="0 0 900 420">
+  <rect width="100%" height="100%" fill="#fff9fb"/>
+  <g font-family="sans-serif" font-size="13" fill="#333">
+    <rect x="12" y="12" width="420" height="396" rx="12" fill="#fff" stroke="#ffe6f2" />
+    <text x="36" y="36">Live Conveyor & X-ray (animated)</text>
+
+    <rect x="468" y="12" width="420" height="196" rx="12" fill="#fff" stroke="#ffd6ec" />
+    <text x="492" y="36">Explainability & Actions</text>
+
+    <rect x="468" y="228" width="420" height="180" rx="12" fill="#fff" stroke="#ffd6ec" />
+    <text x="492" y="252">Incident Log & Export</text>
+
+    <!-- stylised baggage icons -->
+    <g transform="translate(40,80)">
+      <rect x="0" y="0" width="120" height="70" rx="8" fill="#ffdff0" stroke="#ffb6d5" />
+      <rect x="160" y="20" width="120" height="70" rx="8" fill="#ffdff0" stroke="#ffb6d5" />
+      <rect x="320" y="40" width="120" height="70" rx="8" fill="#ffdff0" stroke="#ffb6d5" />
+      <circle cx="40" cy="36" r="8" fill="#ff6f98" />
+      <circle cx="200" cy="56" r="8" fill="#ff6f98" />
+      <circle cx="360" cy="76" r="8" fill="#ff6f98" />
+    </g>
+  </g>
+</svg>
