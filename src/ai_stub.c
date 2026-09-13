@@ -1,4 +1,5 @@
 #include "ai_stub.h"
+#include "onnx_wrapper.h"
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -12,7 +13,14 @@ void ai_shutdown(){ }
 
 ai_result_t ai_run_on_frame(const xray_frame_t *frame){
     ai_result_t r; memset(&r,0,sizeof(r));
-    // generate 1-3 detections pseudo-randomly
+    // If ONNX model available, route inference there
+    if(onnx_available()){
+        if(onnx_infer(frame->pixels, frame->w, frame->h, &r)){
+            // ONNX filled r
+            return r;
+        }
+    }
+    // Fallback: generate 1-3 detections pseudo-randomly (C-cheat)
     int n = 1 + (rand()%3);
     for(int i=0;i<n && i<8;i++){
         detection_t *d = &r.detections[r.count++];
