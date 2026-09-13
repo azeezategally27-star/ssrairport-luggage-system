@@ -1,0 +1,5 @@
+# Simulated scenario file (placeholder)
+# Format: each line is a bag id and comma-separated item tokens
+bag1: firearm, battery, phone
+bag2: clothes, shoes, water
+bag3: knife, book
