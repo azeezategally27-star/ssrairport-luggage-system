@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="600" viewBox="0 0 1000 600">
+  <rect width="100%" height="100%" fill="#fbfbff"/>
+  <!-- 3D-style stack: Users -> CDN -> LB -> API pool -> Cache/DB -> Workers -->
+  <g transform="translate(60,40)">
+    <!-- Users -->
+    <g>
+      <rect x="0" y="0" width="140" height="60" rx="10" fill="#fff" stroke="#ffd6ec"/>
+      <text x="70" y="35" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#333">Users</text>
+      <text x="70" y="52" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#777">(Web / Mobile)</text>
+    </g>
+
+    <!-- CDN -->
+    <g transform="translate(200,0)">
+      <rect x="0" y="0" width="180" height="60" rx="12" fill="#fff" stroke="#ffe6f2"/>
+      <text x="90" y="35" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#d6336c">CDN / WAF</text>
+    </g>
+
+    <!-- LB -->
+    <g transform="translate(440,0)">
+      <rect x="0" y="0" width="200" height="60" rx="12" fill="#fff" stroke="#ffd6ec"/>
+      <text x="100" y="35" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#ff7bad">Load Balancers (L4/L7)</text>
+    </g>
+
+    <!-- API pool -->
+    <g transform="translate(0,120)">
+      <rect x="0" y="0" width="520" height="120" rx="16" fill="#fff" stroke="#ffe6f2"/>
+      <text x="260" y="24" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#333">API / Microservices (Auto-scaling)</text>
+
+      <!-- 3D blocks representing instances -->
+      <g transform="translate(20,40)">
+        <rect x="0" y="0" width="120" height="64" rx="8" fill="#ffeff6"/>
+        <rect x="140" y="0" width="120" height="64" rx="8" fill="#ffeff6"/>
+        <rect x="280" y="0" width="120" height="64" rx="8" fill="#ffeff6"/>
+      </g>
+    </g>
+
+    <!-- Cache & DB layer -->
+    <g transform="translate(600,120)">
+      <rect x="0" y="0" width="340" height="160" rx="16" fill="#fff" stroke="#ffd6ec"/>
+      <text x="170" y="24" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#333">Cache / DB / Storage</text>
+
+      <g transform="translate(20,40)">
+        <rect x="0" y="0" width="140" height="60" rx="6" fill="#fff0f7"/>
+        <text x="70" y="36" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#ff5a9e">Redis Cluster</text>
+
+        <rect x="180" y="0" width="140" height="60" rx="6" fill="#fff0f7"/>
+        <text x="250" y="36" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#ff5a9e">Postgres (read replicas)</text>
+
+        <rect x="90" y="84" width="140" height="54" rx="6" fill="#fff0f7"/>
+        <text x="160" y="112" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#ff5a9e">Object Store (S3)</text>
+      </g>
+    </g>
+
+    <!-- Async workers -->
+    <g transform="translate(0,320)">
+      <rect x="0" y="0" width="300" height="100" rx="12" fill="#fff" stroke="#ffe6f2"/>
+      <text x="150" y="26" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#333">Async Workers / Queue Consumers</text>
+      <rect x="20" y="40" width="80" height="42" rx="8" fill="#ffdfe9"/>
+      <rect x="120" y="40" width="80" height="42" rx="8" fill="#ffdfe9"/>
+      <rect x="220" y="40" width="80" height="42" rx="8" fill="#ffdfe9"/>
+    </g>
+
+    <!-- Observability -->
+    <g transform="translate(360,320)">
+      <rect x="0" y="0" width="280" height="100" rx="12" fill="#fff" stroke="#ffd6ec"/>
+      <text x="140" y="26" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#333">Observability & Ops</text>
+      <text x="140" y="54" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#777">Tracing / Metrics / Logs / Alerts</text>
+    </g>
+
+    <!-- Arrows -->
+    <g stroke="#ff9fc4" stroke-width="3" fill="none">
+      <path d="M140,30 L200,30" marker-end="url(#arrow)" />
+      <path d="M380,30 L440,30" marker-end="url(#arrow)" />
+      <path d="M540,60 L540,120" marker-end="url(#arrow)" />
+      <path d="M520,180 L600,180" marker-end="url(#arrow)" />
+      <path d="M260,240 L260,320" marker-end="url(#arrow)" />
+    </g>
+
+    <defs>
+      <marker id="arrow" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L9,3 z" fill="#ff5a9e" />
+      </marker>
+    </defs>
+  </g>
+</svg>

@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:6
+    ports: ["6379:6379"]
+  api:
+    build: ./go_server
+    ports: ["8080:8080"]
+    depends_on: [redis]
+  worker:
+    build: ./worker
+    depends_on: [api, redis]
