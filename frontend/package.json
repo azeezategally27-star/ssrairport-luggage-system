@@ -1,0 +1,12 @@
+{
+  "name": "ssrairport-frontend",
+  "version": "0.1.0",
+  "description": "Electron frontend for SSRAirport luggage biometric demo",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^25.0.0"
+  }
+}
