@@ -1,0 +1,2 @@
+# example scenario placeholder
+# Phase-1 uses internal random behaviors; scenarios will be added in future phases
