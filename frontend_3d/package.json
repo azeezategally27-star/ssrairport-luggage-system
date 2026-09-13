@@ -1,0 +1,12 @@
+{
+  "name": "ssrairport-frontend-3d",
+  "version": "0.1.0",
+  "description": "Electron + Three.js 3D Blockchain Ledger demo (pink theme)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^25.0.0"
+  }
+}
