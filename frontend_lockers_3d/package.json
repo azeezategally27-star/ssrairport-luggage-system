@@ -1,0 +1,12 @@
+{
+  "name": "ssrairport-lockers-3d",
+  "version": "0.1.0",
+  "description": "Electron + Three.js Smart Locker Digital Twin demo for SSRAirport",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^25.0.0"
+  }
+}

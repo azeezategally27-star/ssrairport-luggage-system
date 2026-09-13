@@ -1,0 +1,10 @@
+body { margin:0; font-family: 'Segoe UI', Roboto, sans-serif; background: #fbfcff; color:#222 }
+#left { position:absolute; left:0; top:0; bottom:0; width:300px; padding:16px; background: linear-gradient(180deg,#ffffff,#f7fbff); box-shadow:2px 0 8px rgba(0,0,0,0.06);} 
+#center { position:absolute; left:300px; right:360px; top:0; bottom:0; }
+#right { position:absolute; right:0; top:0; bottom:0; width:360px; padding:16px; background:#ffffff; border-left:1px solid #f0dfee }
+.controls label{display:block;margin:8px 0}
+input[type=number]{width:60px;padding:6px;border-radius:6px;border:1px solid #eee}
+button{display:block;width:100%;padding:8px;margin:8px 0;border:none;background:#0cc9d8;color:#fff;border-radius:8px;cursor:pointer}
+button:hover{opacity:0.95}
+#scene{width:100%;height:100%;display:block}
+#events{max-height:300px;overflow:auto;background:#fcfdff;padding:8px;border-radius:6px;border:1px solid #f2f2f8}
