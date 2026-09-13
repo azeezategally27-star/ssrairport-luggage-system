@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SSR Airport — C Backend / Multi‑language Frontends — Magazine Brief</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fff;
+    --muted:#f6f6fb;
+    --ink:#111827;
+    --purple:#6b46ff;
+    --soft-purple:#efeaff;
+    --pink:#ffd6ea;
+    --card:#ffffff;
+    --mono:'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  }
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--soft-purple),#fff);font-family:Inter,system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;color:var(--ink)}
+  .wrap{max-width:1100px;margin:28px auto;padding:26px}
+  header{display:flex;gap:16px;align-items:center}
+  .logo{width:76px;height:76px;border-radius:12px;background:linear-gradient(135deg,#fff,#efdeff);display:flex;align-items:center;justify-content:center;color:var(--purple);font-weight:800;font-size:20px;box-shadow:0 10px 24px rgba(107,70,255,0.08)}
+  h1{margin:0;font-size:26px}
+  .muted{color:#6b7280}
+  .card{background:var(--card);border-radius:12px;padding:18px;margin:18px 0;box-shadow:0 10px 30px rgba(20,16,48,0.04)}
+  h2{color:var(--purple);margin:8px 0}
+  pre{background:#0b1020;color:#e6eef8;padding:12px;border-radius:8px;overflow:auto;font-family:var(--mono);font-size:13px}
+  code{font-family:var(--mono);font-size:12px;color:#bfe0ff}
+  .row{display:flex;gap:18px}
+  .col{flex:1}
+  #slime {width:100%;height:260px;border-radius:10px;background:linear-gradient(180deg,#fff8fb,#fff);display:block}
+  #three {width:100%;height:420px;border-radius:10px;background:linear-gradient(180deg,#fff,#f7f6ff);border:1px dashed rgba(120,120,140,0.06)}
+  .controls button{margin-right:8px;padding:8px 12px;border-radius:8px;border:1px solid rgba(107,70,255,0.08);background:#fff}
+  footer{margin-top:18px;color:#7c7c86;font-size:13px}
+  @media (max-width:900px){
+    .row{flex-direction:column}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">SSR</div>
+      <div>
+        <h1>SSR Airport — C backend with multi‑language frontends</h1>
+        <div class="muted">Concise magazine brief. Backend in C (server, solver, ingestion). Frontends: JavaScript (Three.js), Python (desktop), and ncurses demo.</div>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2>Quick summary — straight to the point</h2>
+      <p class="muted">We build a reliable C backend for heavy lifting (real‑time solver, scan ingest, TCP/UNIX socket API). For visualization and operator UI we use languages optimized for graphic/desktop: JavaScript (WebGL/Three.js) for 3D visual previews, Python + PyOpenGL or moderngl for refined desktop, and a lightweight ncurses UI for terminal ops. This page includes runnable snippets, wiring examples, and diagrams you can export to PDF.</p>
+    </section>
+
+    <!-- Cute pink demo -->
+    <section class="card" style="background:linear-gradient(180deg,#fff8fb,#fff)">
+      <h2 style="color:#b83b6b">Mini Pink Demo — Slime Mold gist (client-side)</h2>
+      <p class="muted">Short, cute JS demo that visually demonstrates conductance update rules. This runs in the page for quick comprehension.</p>
+
+      <div class="row">
+        <div class="col">
+          <div id="slime"></div>
+          <div style="margin-top:10px" class="controls">
+            <button onclick="smStep()">Step</button>
+            <button onclick="smAuto()">Auto</button>
+            <button onclick="smReset()">Reset</button>
+          </div>
+        </div>
+        <div style="width:360px">
+          <h3>How it works — tiny</h3>
+          <ol style="margin-left:18px" class="muted">
+            <li>Compute pressures p_i by solving linear system (Kirchhoff) for node potentials with sources/sinks.</li>
+            <li>Flux Q_ij = D_ij * (p_i - p_j) / L_ij.</li>
+            <li>D_ij ← D_ij + dt*(α*|Q_ij| - β*D_ij) — edges with flow strengthen, others decay.</li>
+          </ol>
+          <h4>Client JS core (concept)</h4>
+          <pre><code>// Very small Physarum-like step (pseudo-JS)
+const edges=[{a:0,b:1,L:1,D:1},{a:1,b:2,L:1,D:1}];
+const nodes=[{src:1},{src:0},{src:-1}]; // +1 source, -1 sink
+function solvePressures(){ /* small linear solve for p */ }
+function computeFlux(){ edges.forEach(e=> e.Q = e.D*(p[e.a]-p[e.b])/e.L); }
+function updateD(dt=0.1,α=1,beta=0.2){ edges.forEach(e=> e.D += dt*(α*Math.abs(e.Q) - beta*e.D)); }</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- C Backend: core -->
+    <section class="card">
+      <h2>C backend (core) — server, solver, scan ingest</h2>
+      <p class="muted">Keep the heavy computation and all sensitive integrations in a compiled, performant C process. This example aligns with the code in your repo (msgbus, agents, backend_server). The backend exposes a TCP or Unix socket API for frontends to query solver state, push scans, and subscribe to events.</p>
+
+      <h3>Backend roles</h3>
+      <ul class="muted" style="margin-left:18px">
+        <li>Real‑time Physarum solver (updates conductances) — numeric stability & performance in C.</li>
+        <li>Scan ingestion: receive X‑ray frames or meta streams, run fast scoring or call an ONNX runtime extractor.</li>
+        <li>Event bus: publish events (GATE_ASSIGNED, ALERT, BAG_ROUTED) over message queue and socket endpoints.</li>
+        <li>Security: run with least privilege, sanitize inputs, log high‑level metadata only (apply legal rules).</li>
+      </ul>
+
+      <h3>Compile & run (example)</h3>
+      <pre><code>// Build
+gcc -std=c11 -O2 -pthread -o backend_server src/backend_server.c
+// Run
+./backend_server
+// The server listens on localhost:5555 for simple commands (ENROLL,VERIFY,INJEST_SCAN,QUERY_STATE)
+</code></pre>
+
+      <h3>Key C snippet: solver update (concept)</h3>
+      <pre><code>// physarum_step.c (conceptual)
+#include &lt;math.h&gt;
+void physarum_step(edge_t *edges, int E, double dt, double alpha, double beta){
+  // edges contain D, L, endpoints a,b; pressures p[] computed separately.
+  for(int i=0;i&lt;E;++i){
+    double Q = edges[i].D * (p[edges[i].a] - p[edges[i].b]) / edges[i].L;
+    edges[i].D += dt * (alpha * fabs(Q) - beta * edges[i].D);
+    if(edges[i].D &lt; 1e-6) edges[i].D = 1e-6;
+  }
+}
+</code></pre>
+
+      <p class="muted">The C backend periodically solves pressure equations and updates D. It stores graph state in memory and persists checkpoints (optional SQLite for persistence).</p>
+    </section>
+
+    <!-- Frontends: JS Three.js and Python -->
+    <section class="card">
+      <h2>Frontends — multiple languages (why & how)</h2>
+      <p class="muted">Frontends are UI-focused: 3D previews, operator dashboards, and quick terminal tools. They connect to the C backend over TCP/UNIX socket or via message-bus bridge.</p>
+
+      <div class="row">
+        <div class="col">
+          <h3>JavaScript (Three.js) — 3D visualization</h3>
+          <div id="three"></div>
+          <p class="muted">A WebGL frontend shows flowing tubes (thickness = conductance) and per-bag anomaly overlays. The web client periodically polls the C backend for conductances and bag scores, and animates accordingly.</p>
+
+          <h4>Minimal client pseudo-code</h4>
+          <pre><code>// three-client.js (sketch)
+fetch('/api/state') // or connect websocket to backend
+  .then(r =&gt; r.json())
+  .then(state =&gt; {
+    // build tubes where radius ~ D_ij
+    // animate by moving UVs, color by flow
+  });
+// On bag alert: show red overlay and open inspector
+</code></pre>
+        </div>
+
+        <div style="width:360px">
+          <h3>Python desktop (moderngl / PyOpenGL)</h3>
+          <p class="muted">For operations rooms, a native desktop app gives higher fidelity controls, richer GL shaders, and direct sockets to the C server. Use Python for rapid UI and advanced plotting (matplotlib, vispy) while the backend C does heavy compute.</p>
+
+          <h4>Python connection (sketch)</h4>
+          <pre><code># py_client.py (sketch)
+import socket, json
+s = socket.create_connection(('127.0.0.1', 5555))
+s.sendall(b'QUERY_STATE\n')
+state = json.loads(s.recv(65536).decode())
+# update desktop GL scene with state
+</code></pre>
+
+          <h3>Terminal UI (ncurses)</h3>
+          <p class="muted">For kiosks or remote terminals, an ncurses frontend (C or Python) shows logs, alerts, and simple enroll/verify keys. Quick and reliable.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Security pipeline -->
+    <section class="card">
+      <h2 style="color:#b83b6b">X‑Ray Security pipeline — high level & safety</h2>
+      <p class="muted">We architect the security pipeline so that the C backend processes sensitive frames and returns high‑level, auditable scores; frontends only receive non-sensitive metadata and visual cues. Human‑in‑the‑loop review is enforced before any enforcement action.</p>
+
+      <h3>Pipeline steps</h3>
+      <ol class="muted" style="margin-left:18px">
+        <li>Frame ingest (C): read frame, pre-process, optionally run optimized ONNX extractor.</li>
+        <li>Scoring (C): compute anomaly score. If score&gt;threshold → publish ALERT event (no raw image in event).</li>
+        <li>Operator review (frontend): show composite visualization; on confirm → record audit log and escalate.</li>
+      </ol>
+
+      <h3>Sample server command exchange (text protocol)</h3>
+      <pre><code>// client &lt;-&gt; C backend (TCP simple protocol)
+// ENROLL &lt;id&gt;
+// VERIFY &lt;id&gt;
+// INGEST_SCAN &lt;bagid&gt; &lt;binary-frame&gt;  (binary stream framed)
+// QUERY_STATE
+// ALERT &lt;bagid&gt; &lt;score&gt;
+</code></pre>
+
+      <p class="muted">PRIVACY: do not transmit raw frames to cloud or store them long term. Store only derived features and event logs unless a clear lawful requirement exists.</p>
+    </section>
+
+    <!-- Optimization architecture -->
+    <section class="card">
+      <h2>Optimization: reduce bottlenecks at peak</h2>
+      <p class="muted">Combine predictive scheduling (flight manifests), Physarum routing, and adaptive lane scaling. The C backend uses scheduled events + live telemetry to bias source strengths in the solver (S_i), making the network pre-adapt before peaks.</p>
+
+      <h4>Pseudocode: peak handling</h4>
+      <pre><code>// when future flight list predicts load
+for each upcoming flight f at time T:
+  schedule source boost: S[node(f)] += expected_pax(f)/scale
+// solver then strengthens links ahead of time
+</code></pre>
+
+      <p class="muted">This reduces sudden reroutes and mechanical re‑loads by adapting network geometry proactively.</p>
+    </section>
+
+    <!-- Diagrams (recreated screenshot) -->
+    <section class="card">
+      <h2>Recreated diagram — system flow (visual)</h2>
+      <svg width="100%" viewBox="0 0 1000 260" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" rx="10" fill="#fff"/>
+        <g transform="translate(30,20)">
+          <rect x="0" y="0" width="160" height="50" rx="8" fill="#fff8fb" stroke="#ffd6ea"/>
+          <text x="16" y="32" fill="#b83b6b">Checkin / Flight</text>
+
+          <rect x="220" y="0" width="200" height="50" rx="8" fill="#f7f4ff" stroke="#efeaff"/>
+          <text x="240" y="32" fill="#6b46ff">Coordinator (C backend)</text>
+
+          <rect x="460" y="0" width="160" height="50" rx="8" fill="#fff8fb" stroke="#ffd6ea"/>
+          <text x="480" y="32" fill="#b83b6b">Conveyors / Gates</text>
+
+          <line x1="160" y1="25" x2="220" y2="25" stroke="#ffd6ea" stroke-width="3" marker-end="url(#a)"/>
+          <line x1="420" y1="25" x2="460" y2="25" stroke="#ffd6ea" stroke-width="3" marker-end="url(#a)"/>
+
+          <defs><marker id="a" viewBox="0 0 10 10" refX="10" refY="5" markerUnits="strokeWidth" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ff8fb0"/></marker></defs>
+
+          <!-- bottom row: security -->
+          <rect x="0" y="100" width="160" height="50" rx="8" fill="#f2f7ff" stroke="#e7edff"/>
+          <text x="18" y="132" fill="#2b4bfd">X-ray / Sensors</text>
+
+          <rect x="220" y="100" width="200" height="50" rx="8" fill="#fff" stroke="#efeaff"/>
+          <text x="240" y="132" fill="#6b46ff">C scoring / alert publish</text>
+
+          <rect x="460" y="100" width="260" height="50" rx="8" fill="#fff8fb" stroke="#ffd6ea"/>
+          <text x="480" y="132" fill="#b83b6b">Operator UI (Python / JS)</text>
+
+          <line x1="160" y1="125" x2="220" y2="125" stroke="#efeaff" stroke-width="3" marker-end="url(#b)"/>
+          <line x1="420" y1="125" x2="460" y2="125" stroke="#ffe2ee" stroke-width="3" marker-end="url(#b)"/>
+          <defs><marker id="b" viewBox="0 0 10 10" refX="10" refY="5" markerUnits="strokeWidth" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#efeaff"/></marker></defs>
+        </g>
+      </svg>
+    </section>
+
+    <!-- Integration: wiring & commands -->
+    <section class="card">
+      <h2>Integration: wiring & commands (concrete)</h2>
+      <p class="muted">Keep the protocol simple and auditable. Use text commands for human ops and a binary framed channel for frames if needed. Below are example command formats and recommended steps to run demo components.</p>
+
+      <h4>Simple text protocol (example)</h4>
+      <pre><code>ENROLL PAX123
+VERIFY PAX123
+INGEST_SCAN BAG001 &lt;binary frame&gt;
+QUERY_STATE
+SUBSCRIBE_EVENTS (opens a stream of JSON events)
+</code></pre>
+
+      <h4>How to run demo pieces locally (quick)</h4>
+      <ol class="muted" style="margin-left:18px">
+        <li>Build backend (C):
+          <pre><code>gcc -std=c11 -O2 -pthread -o backend_server src/backend_server.c</code></pre>
+        </li>
+        <li>Run backend:
+          <pre><code>./backend_server</code></pre>
+        </li>
+        <li>Run JS demo (open this HTML in a browser to view Three.js demo placeholder). For full JS frontend, host simple static files (python -m http.server).</li>
+        <li>For Python desktop, run py_client.py sketch (connects to backend socket).</li>
+      </ol>
+
+      <p class="muted"><strong>Note:</strong> Replace demo scoring with an ONNX extractor in C (ONNX Runtime C API) for realistic feature extraction. Keep raw frames local and apply strict logging / access controls.</p>
+    </section>
+
+    <footer>
+      <div class="muted">This document is a high‑level engineering preview intended for academic, design, and prototype work. It intentionally avoids providing information that could be misused to bypass security systems. For production, consult legal and security experts and follow regulatory guidance.</div>
+    </footer>
+  </div>
+
+  <!-- Minimal JS: mini slime demo & simple placeholders -->
+  <script>
+    // Small canvas-based "slime" demo that visualizes conductances
+    const canvas = document.createElement('canvas');
+    canvas.width = 760; canvas.height = 240;
+    document.getElementById('slime').appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+
+    // Graph: 6 nodes
+    const nodes = [
+      {x:80,y:40}, {x:220,y:40}, {x:360,y:40}, {x:500,y:40},
+      {x:150,y:160},{x:410,y:160}
+    ];
+    const edges = [
+      {a:0,b:1,L:1,D:1}, {a:1,b:2,L:1,D:1}, {a:2,b:3,L:1,D:1},
+      {a:1,b:4,L:1.2,D:0.5}, {a:2,b:5,L:1.2,D:0.5}, {a:4,b:5,L:2,D:0.3}
+    ];
+    let auto=false;
+
+    function drawSlime(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      // draw edges: width proportional to D
+      edges.forEach(e=>{
+        const A=nodes[e.a], B=nodes[e.b];
+        ctx.beginPath();
+        ctx.lineWidth = Math.max(1, e.D*6);
+        ctx.strokeStyle = `rgba(184,59,107,${Math.min(0.95,0.2+e.D/2)})`;
+        ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke();
+      });
+      // nodes
+      nodes.forEach((n,i)=>{
+        ctx.beginPath(); ctx.fillStyle='#fff'; ctx.strokeStyle='#ffcee3'; ctx.lineWidth=2;
+        ctx.arc(n.x,n.y,14,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle='#b83b6b'; ctx.font='12px Inter'; ctx.fillText('N'+i,n.x-10,n.y+4);
+      });
+    }
+
+    function computePressures(){
+      // trivial fake pressures for demo: left high, right low, middle scaled by D
+      const p = [1,0.6,0.2,-0.2,0.5,0];
+      return p;
+    }
+    function computeFlux(p){
+      edges.forEach(e=> e.Q = e.D*(p[e.a]-p[e.b])/e.L );
+    }
+    function updateD(dt=0.12,alpha=1,beta=0.25){
+      edges.forEach(e=>{
+        e.D += dt*(alpha*Math.abs(e.Q) - beta*e.D);
+        if(e.D<0.02) e.D=0.02;
+        if(e.D>3) e.D=3;
+      });
+    }
+    function step(){
+      const p = computePressures();
+      computeFlux(p);
+      updateD();
+      drawSlime();
+    }
+    function smStep(){ step(); }
+    function smAuto(){ auto=!auto; if(auto) runAuto(); }
+    function smReset(){ edges.forEach(e=>e.D=1); drawSlime(); auto=false; }
+    function runAuto(){ if(!auto) return; step(); setTimeout(runAuto,220); }
+    drawSlime();
+
+    // Placeholder Three.js setup (only a static placeholder here to keep single-file)
+    (function(){
+      const container = document.getElementById('three');
+      container.innerHTML = '';
+      const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      svg.setAttribute('width','100%'); svg.setAttribute('height','100%'); svg.setAttribute('viewBox','0 0 800 420');
+      svg.innerHTML = `
+      <defs>
+        <linearGradient id="g3" x1="0" x2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#f7f6ff"/></linearGradient>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#g3)"/>
+      <g transform="translate(60,40)">
+        <rect x="0" y="0" width="160" height="40" rx="8" fill="#fff8fb" stroke="#ffd6ea"/><text x="12" y="26" fill="#b83b6b">Conveyor (3D preview)</text>
+        <g transform="translate(0,70)">
+          <rect x="0" y="0" width="620" height="64" rx="8" fill="#fff" stroke="#e9e7ff"/>
+          <text x="12" y="40" fill="#6b46ff">X-ray density overlay (shader)</text>
+        </g>
+        <g transform="translate(20,160)">
+          <rect x="0" y="0" width="140" height="40" rx="6" fill="#fff" stroke="#e9e7ff"/><text x="10" y="26" fill="#6b46ff">Bag: BAG001</text>
+          <rect x="160" y="0" width="140" height="40" rx="6" fill="#fff" stroke="#ffecec"/><text x="170" y="26" fill="#b83b6b">Alert: 0.78</text>
+        </g>
+      </g>`;
+      container.appendChild(svg);
+    })();
+  </script>
+</body>
+</html>
