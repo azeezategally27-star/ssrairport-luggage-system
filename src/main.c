@@ -1,86 +1,96 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
-#include <SDL2/SDL.h>
-#include "renderer.h"
-#include "xray_simulator.h"
-#include "ai_stub.h"
-#include "sensors.h"
-#include "logging.h"
-#include "scene_state.h"
+#include <unistd.h>
 
-int main(int argc, char **argv){
-    bool sim = true;
-    const char *model_path = NULL;
-    for(int i=1;i<argc;i++){
-        if(strcmp(argv[i],"--sim")==0) sim = true;
-        if(strcmp(argv[i],"--no-sim")==0) sim = false;
-        if(strcmp(argv[i],"--model")==0 && i+1<argc) model_path = argv[++i];
-    }
+#include "msgbus.h"
+#include "agents.h"
 
-    printf("Starting X-ray demo (sim=%d)\n", sim);
-
-    logging_init("demo/xray_evidence");
-    sensors_init();
-    ai_init(true); // demo mode
-    if(model_path){
-        if(onnx_load_model(model_path)) printf("ONNX model loaded: %s\n", model_path);
-        else printf("ONNX model failed to load: %s\n", model_path);
-    }
-
-    if(!renderer_init()){
-        fprintf(stderr, "Failed to initialize renderer\n");
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s data/flights.csv\n", argv[0]);
         return 1;
     }
 
-    conveyor_init();
+    const char *csv = argv[1];
 
-    bool running = true;
-    Uint32 last = SDL_GetTicks();
-    while(running){
-        SDL_Event ev;
-        while(SDL_PollEvent(&ev)){
-            if(ev.type == SDL_QUIT) running = false;
-            if(ev.type == SDL_KEYDOWN){
-                if(ev.key.keysym.sym == SDLK_ESCAPE) running = false;
-                if(ev.key.keysym.sym == SDLK_SPACE) conveyor_toggle_hold();
-            }
-        }
+    msgbus_init();
 
-        sensors_update();
-        conveyor_update();
-
-        if(conveyor_bag_in_tunnel()){
-            xray_frame_t frame;
-            xray_render_current(&frame);
-            ai_result_t res = ai_run_on_frame(&frame);
-            sensors_readout_t sr = sensors_get_readout();
-            float fused = ai_fuse_with_sensors(&res, &sr);
-            res.threat_score = fused;
-
-            // publish result for renderer overlays
-            scene_state_set_result(&res);
-
-            if(res.threat_score > 0.75f){
-                logging_save_evidence(&frame, &res, &sr);
-                conveyor_hold_current();
-            } else {
-                free(frame.pixels);
-            }
-        }
-
-        renderer_frame();
-
-        Uint32 now = SDL_GetTicks();
-        Uint32 dt = now - last;
-        if(dt < 16) SDL_Delay(16 - dt);
-        last = SDL_GetTicks();
+    /* Setup gate state (e.g., 6 gates) */
+    gate_state_t *gs = calloc(1, sizeof(gate_state_t));
+    gs->gate_count = 6;
+    gs->gates = calloc(gs->gate_count, sizeof(gate_t));
+    for (int i=0;i<gs->gate_count;i++) {
+        gs->gates[i].gate_id = i;
+        gs->gates[i].occupied = 0;
+        gs->gates[i].flight[0] = '\0';
     }
+    pthread_mutex_init(&gs->lock, NULL);
 
-    renderer_shutdown();
-    ai_shutdown();
-    sensors_shutdown();
-    logging_shutdown();
+    /* Create agents */
+    agent_t *monitor = create_monitor_agent();
+    agent_t *gate = create_gate_agent(gs);
+    agent_t *baggage = create_baggage_agent();
+    agent_t *security = create_security_agent();
+    agent_t *coord = create_coordinator(gs);
+
+    /* Start agents */
+    agent_start(monitor);
+    agent_start(gate);
+    agent_start(baggage);
+    agent_start(security);
+    agent_start(coord);
+
+    /* Read CSV and post EVT_FLIGHT_ARRIVAL events */
+    FILE *f = fopen(csv, "r");
+    if (!f) {
+        perror("open csv");
+        return 1;
+    }
+    char line[256];
+    int sim_time = 0;
+    // events are scheduled by minute offset in CSV (small simulation)
+    while (fgets(line, sizeof(line), f)) {
+        if (line[0] == '#' || strlen(line) < 3) continue;
+        char flight[32], airline[32];
+        int arrival = 0, pax = 0, priority = 0;
+        // CSV: flight_id,airline,arrival_time,min,pax,priority
+        // trust simple CSV
+        sscanf(line, "%31[^,],%31[^,],%d,%d,%d", flight, airline, &arrival, &pax, &priority);
+        // schedule: sleep until arrival (simulated quickly: 1 second per minute)
+        int delay = arrival - sim_time;
+        if (delay > 0) {
+            for (int i=0;i<delay;i++) {
+                sleep(1); // 1 sec == 1 minute in simulation
+                sim_time++;
+                // occasional heartbeat
+                message_t hb = { .type = EVT_NONE };
+                msgbus_broadcast(&hb);
+            }
+        }
+        // post arrival event
+        message_t evt = { .type = EVT_FLIGHT_ARRIVAL };
+        snprintf(evt.payload, sizeof(evt.payload), "%s %d %d %d", flight, pax, arrival, priority);
+        strncpy(evt.topic, flight, sizeof(evt.topic)-1);
+        msgbus_send(coord, &evt);
+    }
+    fclose(f);
+
+    // let the system process for a while
+    sleep(5);
+
+    // send shutdown broadcast
+    message_t sd = { .type = EVT_SHUTDOWN };
+    msgbus_broadcast(&sd);
+
+    // graceful stop
+    msgbus_shutdown_all();
+
+    // cleanup
+    free(gs->gates);
+    free(gs);
+
+    printf("Simulation finished.\n");
     return 0;
 }

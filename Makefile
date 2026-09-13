@@ -1,19 +1,21 @@
 CC = gcc
-CFLAGS = -Wall -g `sdl2-config --cflags` -I./src
-LDFLAGS = `sdl2-config --libs` -lGL -lm -lpthread
+CFLAGS = -std=c11 -O2 -Wall -Wextra -pthread
+LDFLAGS = -lncurses
 
-# sources (modern renderer and optional onnx wrapper are included)
-SRC = src/main.c src/renderer.c src/xray_simulator.c src/ai_stub.c src/sensors.c src/logging.c src/onnx_wrapper.c src/scene_state.c
-OBJ = $(SRC:.c=.o)
-BIN = bin/xray_demo
+# Targets
+all: airport_sim biometric_app backend_server frontend_client
 
-all: $(BIN)
+airport_sim: src/main.c src/msgbus.c src/agents.c
+	$(CC) $(CFLAGS) -o $@ src/main.c src/msgbus.c src/agents.c
 
-$(BIN): $(OBJ)
-	@mkdir -p bin demo/xray_evidence
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+biometric_app: src/biometric_app.c src/biometric_agents.c src/msgbus.c
+	$(CC) $(CFLAGS) -o $@ src/biometric_app.c src/biometric_agents.c src/msgbus.c $(LDFLAGS)
+
+backend_server: src/backend_server.c
+	$(CC) $(CFLAGS) -o $@ src/backend_server.c -pthread
+
+frontend_client: src/frontend_client.c
+	$(CC) $(CFLAGS) -o $@ src/frontend_client.c -lncurses -pthread
 
 clean:
-	rm -f $(OBJ) $(BIN)
-
-.PHONY: all clean
+	rm -f airport_sim biometric_app backend_server frontend_client
